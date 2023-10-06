@@ -3,12 +3,65 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
+const passport = require("passport");
+const JwtStrategy = require("passport-jwt").Strategy;
+const ExtractJwt = require("passport-jwt").ExtractJwt;
 require("dotenv").config();
 
 const indexRouter = require("./routes/index");
 
+const User = require("./models/user");
+
+const opts = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.TOKEN_KEY,
+};
+
+passport.use(
+  new JwtStrategy(opts, async (jwt_payload, done) => {
+    try {
+      const user = await User.findOne({ id: jwt_payload.sub });
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, false);
+      }
+    } catch (err) {
+      return done(err, false);
+    }
+  })
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
+
 const app = express();
+
+mongoose.set("strictQuery", false);
+const mongoDB = process.env.MONGO_CONNECTION_STRING;
+
+main().catch((err) => console.log(err));
+async function main() {
+  await mongoose
+    .connect(mongoDB)
+    .then(() => {
+      console.log("Connection successful");
+    })
+    .catch((err) => {
+      console.log("Unable to connect to MongoDB: ", err);
+    });
+}
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));

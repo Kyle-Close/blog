@@ -6,6 +6,7 @@ const UserSchema = new Schema({
   password: { type: String, required: true },
   createdOn: { type: Date, required: true },
   isAuthor: { type: Boolean, required: true },
+  token: { type: String },
 });
 
 module.exports = Mongoose.model("User", UserSchema);
