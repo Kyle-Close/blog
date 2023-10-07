@@ -50,3 +50,11 @@ exports.comment_post = [
     res.status(200).json({ message: "Comment added", newComment });
   }),
 ];
+
+exports.comment_delete = asyncHandler(async (req, res) => {
+  const removedComment = await Comment.findByIdAndRemove(req.params.commentId);
+  if (!removedComment) {
+    res.status(404).json({ message: "Could not find comment" });
+  }
+  res.status(200).json({ message: "Comment deleted" });
+});

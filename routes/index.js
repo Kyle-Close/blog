@@ -46,4 +46,11 @@ router.post(
   commentController.comment_post
 );
 
+// DELETE: Remove a comment from a post
+router.delete(
+  "/posts/:postId/comments/:commentId",
+  authenticateJWT,
+  commentController.comment_delete
+);
+
 module.exports = router;
