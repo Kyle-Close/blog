@@ -11,15 +11,25 @@ router.get("/", function (req, res, next) {
 });
 
 // POST: User create
-router.post("/users", authenticateJWT, userController.create_user_post);
+router.post("/users", userController.create_user_post);
 
-// GET: User login
+// POST: User login
 router.post("/login", userController.login_user_post);
 
-// POST: Retrieve all post
+// GET: Retrieve all post
 router.get("/posts", authenticateJWT, postController.posts_get);
 
 // POST: Create a new post
 router.post("/posts", authenticateJWT, postController.create_post);
+
+// GET: Retrieve a specific posts' content
+router.get("/posts/:postId", postController.post_content_get);
+
+// PUT: Update a specific posts' data
+router.put(
+  "/posts/:postId",
+  authenticateJWT,
+  postController.post_content_update
+);
 
 module.exports = router;

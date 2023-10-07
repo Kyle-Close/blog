@@ -1,5 +1,6 @@
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
+const { ObjectId } = require("mongodb");
 
 const Post = require("../models/post");
 const User = require("../models/user");
@@ -66,3 +67,88 @@ exports.create_post = [
     res.status(201).json({ message: "Post successfully created!" });
   }),
 ];
+
+exports.post_content_get = asyncHandler(async (req, res) => {
+  // Find the post
+  const post = await Post.findById(req.params.postId);
+
+  if (!post) {
+    res.status(404).send("Resource not found");
+  }
+
+  res.json(post);
+});
+
+exports.post_content_update = [
+  body("title")
+    .trim()
+    .isLength({ min: 3, max: 30 })
+    .withMessage("Title must be between 3 and 30 characters")
+    .escape(),
+  body("content")
+    .trim()
+    .isLength({ min: 1, max: 99999 })
+    .withMessage("Post must be between 1 and 99,999 characters")
+    .escape(),
+
+  asyncHandler(async (req, res) => {
+    // Check for errors
+    const errors = validationResult(req);
+    // If errors return original data sent
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: errors.array(),
+        postData: req.body,
+      });
+    }
+    // If no errors, get the user submitting the update and the original user
+    const [submittingUser, originalPost] = await Promise.all([
+      User.findById(req.user.id),
+      Post.findById(req.params.postId),
+    ]);
+
+    if (!submittingUser || !originalPost) {
+      return res.status(400).json({
+        success: false,
+        message: "Could not find post or submitting user",
+        postData: req.body,
+      });
+    }
+
+    console.dir(submittingUser._id);
+    console.dir(originalPost.createdBy);
+    // If user is not the original user, return data with an error message
+    if (!objectsAreEqual(submittingUser._id, originalPost.createdBy)) {
+      return res.status(400).json({
+        success: false,
+        message: "Not the original post author",
+        postData: req.body,
+      });
+    }
+    // If the user is the original user, create a new post instance with submitted data
+    const newPostFields = {
+      title: req.body.title,
+      content: req.body.content,
+      isPublished: req.body.isPublished ? true : false,
+    };
+    // Find this post by its ID and update it in a single call
+    const success = await Post.findByIdAndUpdate(
+      req.params.postId,
+      newPostFields
+    );
+    // Return success message
+    if (success) res.status(200).json(success);
+  }),
+];
+
+// HELPERS
+function objectsAreEqual(objA, objB) {
+  console.log(objA.toString());
+  console.log(objB.toString());
+
+  console.log(objA.toString() === objB.toString());
+
+  return objA.toString() === objB.toString();
+}
