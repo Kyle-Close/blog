@@ -59,6 +59,7 @@ exports.create_post = [
     }
 
     const isPublished = req.body.isPublished ? true : false;
+
     const newPost = new Post({
       title: req.body.title,
       content: req.body.content,
@@ -111,12 +112,12 @@ exports.post_content_update = [
     }
 
     // If no errors, get the user submitting the update and the post (for original author)
-    const [user, originalPost] = await Promise.all([
+    const [user, post] = await Promise.all([
       User.findById(req.user),
       Post.findById(req.params.postId),
     ]);
 
-    if (!user || !originalPost) {
+    if (!user || !post) {
       return res.status(400).json({
         success: false,
         message: "Could not find post or submitting user",
@@ -124,20 +125,12 @@ exports.post_content_update = [
       });
     }
 
-    if (!user.isAuthor) {
-      return res
-        .status(400)
-        .json({ message: "Access denied: must be an author" });
+    const isEqual = isPostAuthorEqualToRequestingUser(user, post, req);
+
+    if (isEqual !== true) {
+      res.status(400).json(isEqual);
     }
 
-    // If user is not the original user, return data with an error message
-    if (!objectsAreEqual(user._id, originalPost.createdBy)) {
-      return res.status(400).json({
-        success: false,
-        message: "Not the original post author",
-        postData: req.body,
-      });
-    }
     // If the user is the original user, create a new post instance with submitted data
     const newPostFields = {
       title: req.body.title,
@@ -158,6 +151,24 @@ exports.post_content_update = [
 ];
 
 exports.delete_post = asyncHandler(async (req, res) => {
+  // User must be author to delete a post
+  const [user, post] = await Promise.all([
+    User.findById(req.user),
+    Post.findById(req.params.postId),
+  ]);
+
+  if (!user || !post) {
+    res
+      .status(400)
+      .json({ message: "Could not find user credentials or post data" });
+  }
+
+  const isEqual = isPostAuthorEqualToRequestingUser(user, post, req);
+
+  if (isEqual !== true) {
+    res.status(400).json(isEqual);
+  }
+
   const removedPost = await Post.findByIdAndRemove(req.params.postId);
   if (!removedPost) {
     res.status(404).json({ message: "Could not find post" });
@@ -168,4 +179,18 @@ exports.delete_post = asyncHandler(async (req, res) => {
 // HELPERS
 function objectsAreEqual(objA, objB) {
   return objA.toString() === objB.toString();
+}
+
+function isUserAuthor(user) {
+  return user.isAuthor;
+}
+
+function isPostAuthorEqualToRequestingUser(user, post, req) {
+  if (!objectsAreEqual(user._id, post.createdBy)) {
+    return {
+      success: false,
+      message: "Not the original post author",
+      postData: req.body,
+    };
+  } else return true;
 }
