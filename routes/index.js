@@ -3,6 +3,7 @@ var router = express.Router();
 
 const userController = require("../controllers/userController");
 const postController = require("../controllers/postController");
+const commentController = require("../controllers/commentController");
 
 const authenticateJWT = require("../helpers/authMiddleware");
 
@@ -34,5 +35,15 @@ router.put(
 
 // DELETE: Delate a specific post
 router.delete("/posts/:postId", authenticateJWT, postController.delete_post);
+
+// GET: Retrieve all comments on specific post
+router.get("/posts/:postId/comments", commentController.comments_get);
+
+// POST: Create new comment on specific post
+router.post(
+  "/posts/:postId/comments",
+  authenticateJWT,
+  commentController.comment_post
+);
 
 module.exports = router;

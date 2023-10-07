@@ -1,6 +1,5 @@
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
-const { ObjectId } = require("mongodb");
 
 const Post = require("../models/post");
 const User = require("../models/user");
