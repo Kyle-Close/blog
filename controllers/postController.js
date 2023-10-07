@@ -28,6 +28,21 @@ exports.create_post = [
     .escape(),
 
   asyncHandler(async (req, res) => {
+    // Need to be an author to create a post
+    const user = await User.findById(req.user);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (!user.isAuthor) {
+      return res
+        .status(400)
+        .json({ message: "Access denied: must be an author" });
+    }
+
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -40,14 +55,6 @@ exports.create_post = [
       res.json({
         post,
         errors: errors.array(),
-      });
-    }
-
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
       });
     }
 
@@ -102,7 +109,7 @@ exports.post_content_update = [
     }
     // If no errors, get the user submitting the update and the original user
     const [submittingUser, originalPost] = await Promise.all([
-      User.findById(req.user.id),
+      User.findById(req.user),
       Post.findById(req.params.postId),
     ]);
 

@@ -31,13 +31,15 @@ exports.create_user_post = [
         const newUser = new User({
           username: req.body.username,
           password: hashedPassword,
-          isAuthor: req.body.isAuthor,
+          isAuthor: req.body.isAuthor ? true : false,
           createdOn: Date.now(),
         });
 
         // Create token
         const token = jwt.sign(
-          { user_id: newUser._id },
+          {
+            _id: newUser._id,
+          },
           process.env.TOKEN_KEY,
           {
             expiresIn: "2h",
@@ -65,9 +67,15 @@ exports.login_user_post = asyncHandler(async (req, res) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       // Create token
-      const token = jwt.sign({ user_id: user._id }, process.env.TOKEN_KEY, {
-        expiresIn: "2h",
-      });
+      const token = jwt.sign(
+        {
+          _id: user._id,
+        },
+        process.env.TOKEN_KEY,
+        {
+          expiresIn: "2h",
+        }
+      );
 
       // Save user token to the database
       user.token = token;

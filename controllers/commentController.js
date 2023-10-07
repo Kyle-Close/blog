@@ -9,7 +9,6 @@ exports.comments_get = asyncHandler(async (req, res) => {
   // Find post
   const post = await Post.findById(req.params.postId);
   // Extract post id
-  console.log(post);
   const postId = post._id;
   // Query db for any comments with id ^
   const comments = await Comment.find({ parentPost: postId });
@@ -35,7 +34,7 @@ exports.comment_post = [
     }
 
     const newComment = new Comment({
-      createdBy: req.user.id,
+      createdBy: req.user,
       createdOn: Date.now(),
       parentPost: req.params.postId,
       content: req.body.content,
