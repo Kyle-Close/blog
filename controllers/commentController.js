@@ -46,7 +46,7 @@ exports.comment_post = [
       res.status(400).json({ message: "Unable to create new comment" });
     }
 
-    res.status(200).json({ message: "Comment added", newComment });
+    res.status(201).json({ message: "Comment added", newComment });
   }),
 ];
 
@@ -55,5 +55,5 @@ exports.comment_delete = asyncHandler(async (req, res) => {
   if (!removedComment) {
     res.status(404).json({ message: "Could not find comment" });
   }
-  res.status(200).json({ message: "Comment deleted" });
+  res.status(204).json({ message: "Comment deleted" });
 });

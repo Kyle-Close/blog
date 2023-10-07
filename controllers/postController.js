@@ -68,7 +68,9 @@ exports.create_post = [
     });
 
     await newPost.save();
-    res.status(201).json({ message: "Post successfully created!" });
+    res
+      .status(201)
+      .json({ message: "Post successfully created!", id: newPost._id });
   }),
 ];
 
@@ -107,13 +109,14 @@ exports.post_content_update = [
         postData: req.body,
       });
     }
-    // If no errors, get the user submitting the update and the original user
-    const [submittingUser, originalPost] = await Promise.all([
+
+    // If no errors, get the user submitting the update and the post (for original author)
+    const [user, originalPost] = await Promise.all([
       User.findById(req.user),
       Post.findById(req.params.postId),
     ]);
 
-    if (!submittingUser || !originalPost) {
+    if (!user || !originalPost) {
       return res.status(400).json({
         success: false,
         message: "Could not find post or submitting user",
@@ -121,10 +124,14 @@ exports.post_content_update = [
       });
     }
 
-    console.dir(submittingUser._id);
-    console.dir(originalPost.createdBy);
+    if (!user.isAuthor) {
+      return res
+        .status(400)
+        .json({ message: "Access denied: must be an author" });
+    }
+
     // If user is not the original user, return data with an error message
-    if (!objectsAreEqual(submittingUser._id, originalPost.createdBy)) {
+    if (!objectsAreEqual(user._id, originalPost.createdBy)) {
       return res.status(400).json({
         success: false,
         message: "Not the original post author",
@@ -137,13 +144,16 @@ exports.post_content_update = [
       content: req.body.content,
       isPublished: req.body.isPublished ? true : false,
     };
+
     // Find this post by its ID and update it in a single call
     const success = await Post.findByIdAndUpdate(
       req.params.postId,
       newPostFields
     );
+
     // Return success message
     if (success) res.status(200).json(success);
+    else res.status(400).json({ message: "Unable to find/update post" });
   }),
 ];
 
@@ -152,7 +162,7 @@ exports.delete_post = asyncHandler(async (req, res) => {
   if (!removedPost) {
     res.status(404).json({ message: "Could not find post" });
   }
-  res.status(200).json({ message: "Post deleted" });
+  res.status(204).json({ message: "Post deleted" });
 });
 
 // HELPERS
