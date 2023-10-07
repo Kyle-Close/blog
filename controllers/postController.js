@@ -46,8 +46,6 @@ exports.create_post = [
 
     const user = await User.findById(req.user.id);
 
-    console.log(user);
-
     if (!user) {
       return res.status(404).json({
         message: "User not found",
@@ -143,12 +141,15 @@ exports.post_content_update = [
   }),
 ];
 
+exports.delete_post = asyncHandler(async (req, res) => {
+  const removedPost = await Post.findByIdAndRemove(req.params.postId);
+  if (!removedPost) {
+    res.status(404).json({ message: "Could not find post" });
+  }
+  res.status(200).json({ message: "Post deleted" });
+});
+
 // HELPERS
 function objectsAreEqual(objA, objB) {
-  console.log(objA.toString());
-  console.log(objB.toString());
-
-  console.log(objA.toString() === objB.toString());
-
   return objA.toString() === objB.toString();
 }

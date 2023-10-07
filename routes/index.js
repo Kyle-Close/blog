@@ -32,4 +32,7 @@ router.put(
   postController.post_content_update
 );
 
+// DELETE: Delate a specific post
+router.delete("/posts/:postId", authenticateJWT, postController.delete_post);
+
 module.exports = router;
