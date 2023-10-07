@@ -7,8 +7,8 @@ const User = require("../models/user");
 const isPostAuthorEqualToRequestingUser = require("../helpers/authHelpers");
 
 exports.posts_get = asyncHandler(async (req, res) => {
-  // Get list of all posts
-  const allPosts = await Post.find();
+  // Get list of all posts that are published
+  const allPosts = await Post.find({ isPublished: { $ne: false } });
 
   if (!allPosts || allPosts.length === 0) {
     res.status(404).send("Resource not found.");
