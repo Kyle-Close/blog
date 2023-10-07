@@ -5,6 +5,8 @@ const Post = require("../models/post");
 const Comment = require("../models/comment");
 const User = require("../models/user");
 
+const isPostAuthorEqualToRequestingUser = require("../helpers/authHelpers");
+
 exports.comments_get = asyncHandler(async (req, res) => {
   // Find post
   const post = await Post.findById(req.params.postId);
@@ -51,9 +53,37 @@ exports.comment_post = [
 ];
 
 exports.comment_delete = asyncHandler(async (req, res) => {
-  const removedComment = await Comment.findByIdAndRemove(req.params.commentId);
-  if (!removedComment) {
-    res.status(404).json({ message: "Could not find comment" });
+  try {
+    // User must be author to delete a post
+    const [user, post] = await Promise.all([
+      User.findById(req.user),
+      Post.findById(req.params.postId),
+    ]);
+
+    if (!user || !post) {
+      return res
+        .status(400)
+        .json({ message: "Could not find user credentials or post data" });
+    }
+
+    const isEqual = isPostAuthorEqualToRequestingUser(user, post, req);
+
+    if (isEqual !== true) {
+      return res.status(400).json(isEqual);
+    }
+
+    console.log(req.params.commentId);
+    const removedComment = await Comment.findByIdAndRemove(
+      req.params.commentId
+    );
+
+    if (!removedComment) {
+      return res.status(404).json({ message: "Could not find comment" });
+    }
+
+    res.status(204).json({ message: "Comment deleted" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
-  res.status(204).json({ message: "Comment deleted" });
 });

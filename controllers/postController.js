@@ -4,6 +4,8 @@ const asyncHandler = require("express-async-handler");
 const Post = require("../models/post");
 const User = require("../models/user");
 
+const isPostAuthorEqualToRequestingUser = require("../helpers/authHelpers");
+
 exports.posts_get = asyncHandler(async (req, res) => {
   // Get list of all posts
   const allPosts = await Post.find();
@@ -175,22 +177,3 @@ exports.delete_post = asyncHandler(async (req, res) => {
   }
   res.status(204).json({ message: "Post deleted" });
 });
-
-// HELPERS
-function objectsAreEqual(objA, objB) {
-  return objA.toString() === objB.toString();
-}
-
-function isUserAuthor(user) {
-  return user.isAuthor;
-}
-
-function isPostAuthorEqualToRequestingUser(user, post, req) {
-  if (!objectsAreEqual(user._id, post.createdBy)) {
-    return {
-      success: false,
-      message: "Not the original post author",
-      postData: req.body,
-    };
-  } else return true;
-}
