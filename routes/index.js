@@ -4,6 +4,7 @@ var router = express.Router();
 const userController = require("../controllers/userController");
 const postController = require("../controllers/postController");
 const commentController = require("../controllers/commentController");
+const popularPostsController = require("../controllers/popularPostsController");
 
 const authenticateJWT = require("../helpers/authMiddleware");
 
@@ -52,5 +53,8 @@ router.delete(
   authenticateJWT,
   commentController.comment_delete
 );
+
+// GET: Retrieve all popular posts
+router.get("/popular-posts", popularPostsController.popular_posts_get);
 
 module.exports = router;

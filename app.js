@@ -7,6 +7,8 @@ const mongoose = require("mongoose");
 const passport = require("passport");
 const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
+const cors = require("cors");
+
 require("dotenv").config();
 
 const indexRouter = require("./routes/index");
@@ -67,6 +69,7 @@ async function main() {
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
+app.use(cors());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

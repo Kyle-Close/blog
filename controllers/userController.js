@@ -22,7 +22,19 @@ exports.create_user_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json(errors.array());
+    }
+
+    // Check if the user already exists
+    const user = await User.find({ username: req.body.username }).exec();
+
+    if (!isEmpty(user)) {
+      const response = [
+        {
+          msg: "user already exists",
+        },
+      ];
+      return res.status(400).json(response);
     }
 
     // Hash the password
@@ -39,6 +51,8 @@ exports.create_user_post = [
         const token = jwt.sign(
           {
             _id: newUser._id,
+            isAuthor: newUser.isAuthor,
+            username: newUser.username,
           },
           process.env.TOKEN_KEY,
           {
@@ -50,7 +64,9 @@ exports.create_user_post = [
         newUser.token = token;
 
         await newUser.save();
-        res.status(201).json({ message: "User created successfully" });
+        res
+          .status(201)
+          .json({ message: "User created successfully", user: newUser });
       } catch (err) {
         return next(err);
       }
@@ -58,7 +74,7 @@ exports.create_user_post = [
   }),
 ];
 
-exports.login_user_post = asyncHandler(async (req, res) => {
+exports.login_user_post = asyncHandler(async (req, res, next) => {
   const { username, password } = req.body;
 
   try {
@@ -70,6 +86,8 @@ exports.login_user_post = asyncHandler(async (req, res) => {
       const token = jwt.sign(
         {
           _id: user._id,
+          isAuthor: user.isAuthor,
+          username: username,
         },
         process.env.TOKEN_KEY,
         {
@@ -79,15 +97,23 @@ exports.login_user_post = asyncHandler(async (req, res) => {
 
       // Save user token to the database
       user.token = token;
-      await user.save();
 
-      // Respond with user and token
-      res.status(200).json({ user, token });
+      try {
+        await user.save();
+        res.status(200).json({ message: "Login successful", user, token });
+      } catch (err) {
+        next(err);
+      }
     } else {
-      res.status(400).send("Invalid Credentials");
+      res.status(400).json({ msg: "Invalid Credentials" });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ msg: "Internal Server Error" });
   }
 });
+
+// HELPERS
+function isEmpty(obj) {
+  return Object.keys(obj).length === 0;
+}
