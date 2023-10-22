@@ -57,4 +57,7 @@ router.delete(
 // GET: Retrieve all popular posts
 router.get("/popular-posts", popularPostsController.popular_posts_get);
 
+// POST: Add a post to popular posts
+router.post("/popular-posts", popularPostsController.add_popular_post_post);
+
 module.exports = router;
