@@ -33,29 +33,48 @@ exports.add_popular_post_post = [
   body("postId")
     .trim()
     .isString()
-    .custom((value) => {
-      if (!mongoose.Types.ObjectId.isValid(value)) {
-        throw new Error("Invalid post id");
-      }
-      return true;
-    })
+    .withMessage("PostId must be a string")
     .escape(),
 
   asyncHandler(async (req, res) => {
     // Check for validation errors
     const errors = validationResult(req);
-    console.log(errors);
-
     if (!errors.isEmpty()) {
-      console.log("here?");
-      res.status(400).json({ msg: "Validation error", errors: errors.array() });
+      return res
+        .status(400)
+        .json({ msg: "Validation error", errors: errors.array() });
     }
+
     // Check if the post id is valid
     const post = await Post.findById(req.body.postId);
-    // Check if there are already 5 popular posts
-    // If yes, remove one
-    // Create new popular post
-    // Save it (add it to db)
+    if (!post) {
+      return res.status(400).json({ msg: "Post not found" });
+    } else {
+      // Check if this post is already a popular post
+      const doesExist = await PopularPosts.find({ postId: req.body.postId });
+      if (doesExist.length > 0) {
+        return res
+          .status(400)
+          .json({ msg: "This post is already a popular post." });
+      }
+      // Check if there are already 5 popular posts
+      const popularPosts = await PopularPosts.find();
+      if (popularPosts.length > 4) {
+        await PopularPosts.findOneAndDelete({});
+      }
+      // Create new popular post
+      const newPopularPost = new PopularPosts({
+        postId: req.body.postId,
+      });
+
+      // Add post to PopularPosts collection
+      const isSuccess = await newPopularPost.save();
+      if (isSuccess) {
+        return res
+          .status(200)
+          .json({ message: "Popular post successfully added." });
+      }
+    }
   }),
 ];
 // Need post id
