@@ -57,9 +57,9 @@ exports.add_popular_post_post = [
           .status(400)
           .json({ msg: "This post is already a popular post." });
       }
-      // Check if there are already 5 popular posts
+      // Check if there are already 4 popular posts
       const popularPosts = await PopularPosts.find();
-      if (popularPosts.length > 4) {
+      if (popularPosts.length > 3) {
         await PopularPosts.findOneAndDelete({});
       }
       // Create new popular post
@@ -77,7 +77,6 @@ exports.add_popular_post_post = [
     }
   }),
 ];
-// Need post id
 
 // ----- UTILITY FUNCTIONS -----
 
