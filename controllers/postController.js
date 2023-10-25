@@ -1,32 +1,32 @@
-const { body, validationResult } = require("express-validator");
-const asyncHandler = require("express-async-handler");
+const { body, validationResult } = require('express-validator');
+const asyncHandler = require('express-async-handler');
 
-const Post = require("../models/post");
-const User = require("../models/user");
+const Post = require('../models/post');
+const User = require('../models/user');
 
-const isPostAuthorEqualToRequestingUser = require("../helpers/authHelpers");
+const isPostAuthorEqualToRequestingUser = require('../helpers/authHelpers');
 
 exports.posts_get = asyncHandler(async (req, res) => {
   // Get list of all posts that are published
   const allPosts = await Post.find({ isPublished: { $ne: false } });
 
   if (!allPosts || allPosts.length === 0) {
-    res.status(404).send("Resource not found.");
+    res.status(404).send('Resource not found.');
   }
 
   res.json({ posts: allPosts });
 });
 
 exports.create_post = [
-  body("title")
+  body('title')
     .trim()
     .isLength({ min: 1, max: 30 })
-    .withMessage("Title must be between 1 ands 30 characters")
+    .withMessage('Title must be between 1 ands 30 characters')
     .escape(),
-  body("content")
+  body('content')
     .trim()
     .isLength({ min: 1, max: 99999 })
-    .withMessage("Post must be between 1 ands 99,999 characters")
+    .withMessage('Post must be between 1 ands 99,999 characters')
     .escape(),
 
   asyncHandler(async (req, res) => {
@@ -35,14 +35,14 @@ exports.create_post = [
 
     if (!user) {
       return res.status(404).json({
-        message: "User not found",
+        message: 'User not found',
       });
     }
 
     if (!user.isAuthor) {
       return res
         .status(400)
-        .json({ message: "Access denied: must be an author" });
+        .json({ message: 'Access denied: must be an author' });
     }
 
     const errors = validationResult(req);
@@ -73,7 +73,7 @@ exports.create_post = [
     await newPost.save();
     res
       .status(201)
-      .json({ message: "Post successfully created!", id: newPost._id });
+      .json({ message: 'Post successfully created!', id: newPost._id });
   }),
 ];
 
@@ -82,22 +82,22 @@ exports.post_content_get = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.postId);
 
   if (!post) {
-    res.status(404).send("Resource not found");
+    res.status(404).send('Resource not found');
   }
 
   res.json(post);
 });
 
 exports.post_content_update = [
-  body("title")
+  body('title')
     .trim()
     .isLength({ min: 3, max: 30 })
-    .withMessage("Title must be between 3 and 30 characters")
+    .withMessage('Title must be between 3 and 30 characters')
     .escape(),
-  body("content")
+  body('content')
     .trim()
     .isLength({ min: 1, max: 99999 })
-    .withMessage("Post must be between 1 and 99,999 characters")
+    .withMessage('Post must be between 1 and 99,999 characters')
     .escape(),
 
   asyncHandler(async (req, res) => {
@@ -107,7 +107,7 @@ exports.post_content_update = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: errors.array(),
         postData: req.body,
       });
@@ -122,7 +122,7 @@ exports.post_content_update = [
     if (!user || !post) {
       return res.status(400).json({
         success: false,
-        message: "Could not find post or submitting user",
+        message: 'Could not find post or submitting user',
         postData: req.body,
       });
     }
@@ -148,7 +148,7 @@ exports.post_content_update = [
 
     // Return success message
     if (success) res.status(200).json(success);
-    else res.status(400).json({ message: "Unable to find/update post" });
+    else res.status(400).json({ message: 'Unable to find/update post' });
   }),
 ];
 
@@ -162,7 +162,7 @@ exports.delete_post = asyncHandler(async (req, res) => {
   if (!user || !post) {
     res
       .status(400)
-      .json({ message: "Could not find user credentials or post data" });
+      .json({ message: 'Could not find user credentials or post data' });
   }
 
   const isEqual = isPostAuthorEqualToRequestingUser(user, post, req);
@@ -173,7 +173,19 @@ exports.delete_post = asyncHandler(async (req, res) => {
 
   const removedPost = await Post.findByIdAndRemove(req.params.postId);
   if (!removedPost) {
-    res.status(404).json({ message: "Could not find post" });
+    res.status(404).json({ message: 'Could not find post' });
   }
-  res.status(204).json({ message: "Post deleted" });
+  res.status(204).json({ message: 'Post deleted' });
+});
+
+exports.recent_posts_get = asyncHandler(async (req, res) => {
+  const last5Posts = await Post.find().sort({ createdOn: -1 }).limit(5);
+  if (last5Posts.length > 0) {
+    return res.status(200).json({
+      message: 'Successfully retrieved recent posts.',
+      posts: last5Posts,
+    });
+  } else {
+    return res.status(400).json({ msg: 'Could not extract recent posts.' });
+  }
 });
