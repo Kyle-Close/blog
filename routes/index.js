@@ -18,6 +18,9 @@ router.post('/users', userController.create_user_post);
 // POST: User login
 router.post('/login', userController.login_user_post);
 
+// GET: Find user
+router.get('/users/:userId', userController.find_user_get);
+
 // GET: Retrieve all post
 router.get('/posts', authenticateJWT, postController.posts_get);
 
