@@ -1,11 +1,11 @@
-const { body, validationResult } = require("express-validator");
-const asyncHandler = require("express-async-handler");
+const { body, validationResult } = require('express-validator');
+const asyncHandler = require('express-async-handler');
 
-const Post = require("../models/post");
-const Comment = require("../models/comment");
-const User = require("../models/user");
+const Post = require('../models/post');
+const Comment = require('../models/comment');
+const User = require('../models/user');
 
-const isPostAuthorEqualToRequestingUser = require("../helpers/authHelpers");
+const isPostAuthorEqualToRequestingUser = require('../helpers/authHelpers');
 
 exports.comments_get = asyncHandler(async (req, res) => {
   // Find post
@@ -16,23 +16,23 @@ exports.comments_get = asyncHandler(async (req, res) => {
   const comments = await Comment.find({ parentPost: postId });
   // If result is empty return status 400 with msg
   if (!comments || comments.length === 0) {
-    res.status(400).json({ message: "No comments found" });
+    res.status(400).json({ message: 'No comments found' });
   }
   // If result is not empty return status 200 with list of all the comments
   res.status(200).json(comments);
 });
 
 exports.comment_post = [
-  body("content")
+  body('content')
     .trim()
     .isLength({ min: 3, max: 200 })
-    .withMessage("Comment must be between 3 and 200 characters")
+    .withMessage('Comment must be between 3 and 200 characters')
     .escape(),
 
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: "Validation error", errors });
+      res.status(400).json({ message: 'Validation error', errors });
     }
 
     const newComment = new Comment({
@@ -42,13 +42,13 @@ exports.comment_post = [
       content: req.body.content,
     });
 
-    const isSuccess = newComment.save();
+    const isSuccess = await newComment.save();
 
     if (!isSuccess) {
-      res.status(400).json({ message: "Unable to create new comment" });
+      res.status(400).json({ message: 'Unable to create new comment' });
     }
 
-    res.status(201).json({ message: "Comment added", newComment });
+    res.status(201).json({ message: 'Comment added', newComment });
   }),
 ];
 
@@ -63,7 +63,7 @@ exports.comment_delete = asyncHandler(async (req, res) => {
     if (!user || !post) {
       return res
         .status(400)
-        .json({ message: "Could not find user credentials or post data" });
+        .json({ message: 'Could not find user credentials or post data' });
     }
 
     const isEqual = isPostAuthorEqualToRequestingUser(user, post, req);
@@ -78,12 +78,12 @@ exports.comment_delete = asyncHandler(async (req, res) => {
     );
 
     if (!removedComment) {
-      return res.status(404).json({ message: "Could not find comment" });
+      return res.status(404).json({ message: 'Could not find comment' });
     }
 
-    res.status(204).json({ message: "Comment deleted" });
+    res.status(204).json({ message: 'Comment deleted' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });

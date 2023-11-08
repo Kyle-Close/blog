@@ -5,6 +5,7 @@ const userController = require('../controllers/userController');
 const postController = require('../controllers/postController');
 const commentController = require('../controllers/commentController');
 const popularPostsController = require('../controllers/popularPostsController');
+const categoryController = require('../controllers/categoryController');
 
 const authenticateJWT = require('../helpers/authMiddleware');
 
@@ -65,5 +66,8 @@ router.post('/popular-posts', popularPostsController.add_popular_post_post);
 
 // GET: Retrieve last 5 recent posts
 router.get('/recent-posts', postController.recent_posts_get);
+
+// POST: Create new category
+router.post('/categories', categoryController.create_category_post);
 
 module.exports = router;
