@@ -198,3 +198,23 @@ exports.recent_posts_get = asyncHandler(async (req, res) => {
     return res.status(400).json({ msg: 'Could not extract recent posts.' });
   }
 });
+
+exports.retrieve_posts_by_category = asyncHandler(async (req, res) => {
+  const category = await Category.findById(req.params.categoryId);
+
+  if (!category) {
+    return res.status(400).json({ msg: 'Could not find category' });
+  }
+
+  const posts = await Post.find({ category: category });
+
+  if (!posts) {
+    return res
+      .status(400)
+      .json({ msg: 'Could not find any posts in category' });
+  }
+
+  return res
+    .status(200)
+    .json({ message: 'Successfully retrieved posts', posts });
+});

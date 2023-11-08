@@ -23,7 +23,7 @@ router.post('/login', userController.login_user_post);
 router.get('/users/:userId', userController.find_user_get);
 
 // GET: Retrieve all post
-router.get('/posts', authenticateJWT, postController.posts_get);
+router.get('/posts', postController.posts_get);
 
 // POST: Create a new post
 router.post('/posts', authenticateJWT, postController.create_post);
@@ -72,5 +72,11 @@ router.get('/categories', categoryController.retrieve_categories_get);
 
 // POST: Create new category
 router.post('/categories', categoryController.create_category_post);
+
+// GET: Retrieve posts from a specific category
+router.get(
+  '/posts/category/:categoryId',
+  postController.retrieve_posts_by_category
+);
 
 module.exports = router;
