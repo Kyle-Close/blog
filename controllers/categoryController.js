@@ -31,3 +31,14 @@ exports.create_category_post = [
       });
   }),
 ];
+
+exports.retrieve_categories_get = asyncHandler(async (req, res) => {
+  const categories = await Category.find();
+  if (!categories) {
+    return res.status(400).json({ msg: 'Could not find any categories' });
+  }
+
+  return res
+    .status(200)
+    .json({ message: 'Successfully retrieved categories', categories });
+});

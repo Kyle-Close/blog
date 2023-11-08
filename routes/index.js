@@ -67,6 +67,9 @@ router.post('/popular-posts', popularPostsController.add_popular_post_post);
 // GET: Retrieve last 5 recent posts
 router.get('/recent-posts', postController.recent_posts_get);
 
+// GET: Retrive all categories
+router.get('/categories', categoryController.retrieve_categories_get);
+
 // POST: Create new category
 router.post('/categories', categoryController.create_category_post);
 

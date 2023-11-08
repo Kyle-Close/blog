@@ -7,7 +7,9 @@ const CategorySchema = new Schema({
   category: {
     type: String,
     required: true,
-    enum: allowedCategories,
+    enum: allowedCategories.map((category) => category.toLowerCase()),
+    set: (value) => value.toLowerCase(),
+    get: (value) => value.toLowerCase(),
   },
 });
 

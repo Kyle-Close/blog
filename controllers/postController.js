@@ -3,6 +3,7 @@ const asyncHandler = require('express-async-handler');
 
 const Post = require('../models/post');
 const User = require('../models/user');
+const Category = require('../models/category');
 
 const isPostAuthorEqualToRequestingUser = require('../helpers/authHelpers');
 
@@ -61,6 +62,13 @@ exports.create_post = [
     }
 
     const isPublished = req.body.isPublished ? true : false;
+    const category = await Category.findById(req.body.category);
+
+    if (!category) {
+      return res
+        .status(400)
+        .json({ msg: 'Invalid post category', category: req.body.category });
+    }
 
     const newPost = new Post({
       title: req.body.title,
@@ -68,6 +76,7 @@ exports.create_post = [
       isPublished: isPublished,
       createdOn: Date.now(),
       createdBy: user,
+      category: category,
     });
 
     await newPost.save();
