@@ -79,4 +79,7 @@ router.get(
   postController.retrieve_posts_by_category
 );
 
+// GET: Retrieve specific category
+router.get('/categories/:categoryId', categoryController.retrieve_category_get);
+
 module.exports = router;

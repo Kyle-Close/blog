@@ -42,3 +42,15 @@ exports.retrieve_categories_get = asyncHandler(async (req, res) => {
     .status(200)
     .json({ message: 'Successfully retrieved categories', categories });
 });
+
+exports.retrieve_category_get = asyncHandler(async (req, res) => {
+  const category = await Category.findById(req.params.categoryId);
+
+  if (!category) {
+    return res.status(400).json({ msg: 'Could not find category' });
+  }
+
+  return res
+    .status(200)
+    .json({ message: 'Successfully retrieved category', category });
+});
