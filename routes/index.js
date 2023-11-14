@@ -82,4 +82,11 @@ router.get(
 // GET: Retrieve specific category
 router.get('/categories/:categoryId', categoryController.retrieve_category_get);
 
+// GET: Retrieve recent posts for specific user
+router.post(
+  '/posts/user/:id',
+  authenticateJWT,
+  postController.retrieve_recent_posts_by_user
+);
+
 module.exports = router;

@@ -218,3 +218,44 @@ exports.retrieve_posts_by_category = asyncHandler(async (req, res) => {
     .status(200)
     .json({ message: 'Successfully retrieved posts', posts });
 });
+
+exports.retrieve_recent_posts_by_user = [
+  body('postLimit').trim().escape(),
+
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user);
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found',
+      });
+    }
+
+    if (!user.isAuthor) {
+      return res
+        .status(400)
+        .json({ message: 'Access denied: must be an author' });
+    }
+
+    const limit = req.body.postLimit;
+    let recentPosts;
+
+    if (limit) {
+      recentPosts = await Post.find({ createdBy: user._id })
+        .sort({ createdOn: -1 })
+        .limit(3);
+    } else {
+      recentPosts = await Post.find({ createdBy: user._id }).sort({
+        createdOn: -1,
+      });
+    }
+
+    if (!recentPosts) {
+      return res.status(400).json({ msg: 'Could not locate any posts' });
+    }
+
+    return res
+      .status(200)
+      .json({ msg: 'Successfully retrieved recent posts', posts: recentPosts });
+  }),
+];
