@@ -55,10 +55,7 @@ exports.create_user_post = [
             isAuthor: newUser.isAuthor,
             username: newUser.username,
           },
-          process.env.TOKEN_KEY,
-          {
-            expiresIn: '2h',
-          }
+          process.env.TOKEN_KEY
         );
 
         // save user token
@@ -90,10 +87,7 @@ exports.login_user_post = asyncHandler(async (req, res, next) => {
           isAuthor: user.isAuthor,
           username: username,
         },
-        process.env.TOKEN_KEY,
-        {
-          expiresIn: '2h',
-        }
+        process.env.TOKEN_KEY
       );
 
       // Save user token to the database
