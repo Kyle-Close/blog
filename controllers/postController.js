@@ -87,11 +87,26 @@ exports.create_post = [
 ];
 
 exports.post_content_get = asyncHandler(async (req, res) => {
-  // Find the post
   const post = await Post.findById(req.params.postId);
 
   if (!post) {
     res.status(404).send('Resource not found');
+  }
+
+  let user;
+  if (req.user) {
+    user = await User.findById(req.user);
+  }
+
+  if (user && !post.isPublished) {
+    // Check if requesting user is the author of the post. Otherwise they shouldn't see
+    const isEqual = isPostAuthorEqualToRequestingUser(user, post, req);
+    if (isEqual !== true) {
+      res
+        .status(400)
+        .json({ msg: 'This post has not been published by the author' });
+      return;
+    }
   }
 
   res.json(post);
@@ -188,7 +203,9 @@ exports.delete_post = asyncHandler(async (req, res) => {
 });
 
 exports.recent_posts_get = asyncHandler(async (req, res) => {
-  const last5Posts = await Post.find().sort({ createdOn: -1 }).limit(5);
+  const last5Posts = await Post.find({ isPublished: { $ne: false } })
+    .sort({ createdOn: -1 })
+    .limit(5);
   if (last5Posts.length > 0) {
     return res.status(200).json({
       message: 'Successfully retrieved recent posts.',
@@ -206,7 +223,10 @@ exports.retrieve_posts_by_category = asyncHandler(async (req, res) => {
     return res.status(400).json({ msg: 'Could not find category' });
   }
 
-  const posts = await Post.find({ category: category });
+  const posts = await Post.find({
+    category: category,
+    isPublished: { $ne: false },
+  });
 
   if (!posts) {
     return res
