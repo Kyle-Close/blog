@@ -89,4 +89,7 @@ router.post(
   postController.retrieve_recent_posts_by_user
 );
 
+// PATCH: Sets a user to "isAuthor = true"
+router.patch('/make_user_author/:userId', userController.make_user_author);
+
 module.exports = router;

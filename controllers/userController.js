@@ -113,7 +113,6 @@ exports.find_user_get = asyncHandler(async (req, res) => {
   try {
     const user = await User.findOne({ _id: userId });
     if (user) {
-      console.log(user);
       return res
         .status(200)
         .json({ message: 'Successfully retrieved user', user });
@@ -122,6 +121,30 @@ exports.find_user_get = asyncHandler(async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ msg: 'Error fetching user' });
+  }
+});
+
+exports.make_user_author = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update the 'isAuthor' property to true
+    user.isAuthor = true;
+
+    // Save the updated user
+    const updatedUser = await user.save();
+
+    return res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

@@ -157,9 +157,18 @@ exports.post_content_update = [
       res.status(400).json(isEqual);
     }
 
+    const category = await Category.findById(req.body.category);
+
+    if (!category) {
+      return res
+        .status(400)
+        .json({ msg: 'Invalid post category', category: req.body.category });
+    }
+
     // If the user is the original user, create a new post instance with submitted data
     const newPostFields = {
       title: req.body.title,
+      category: category,
       content: req.body.content,
       isPublished: req.body.isPublished ? true : false,
     };
