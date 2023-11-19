@@ -141,7 +141,22 @@ exports.make_user_author = asyncHandler(async (req, res) => {
     // Save the updated user
     const updatedUser = await user.save();
 
-    return res.json(updatedUser);
+    // Create a new token with the updated information
+    const newToken = jwt.sign(
+      {
+        _id: updatedUser._id,
+        isAuthor: updatedUser.isAuthor,
+        username: updatedUser.username,
+      },
+      process.env.TOKEN_KEY
+    );
+
+    // Update the user's token in the database
+    updatedUser.token = newToken;
+    await updatedUser.save();
+
+    // Send the new token as part of the response
+    return res.json({ user: updatedUser, token: newToken });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Internal Server Error' });
