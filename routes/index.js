@@ -29,7 +29,15 @@ router.get('/posts', postController.posts_get);
 router.post('/posts', authenticateJWT, postController.create_post);
 
 // GET: Retrieve a specific posts' content
-router.get('/posts/:postId', authenticateJWT, postController.post_content_get);
+router.get(
+  '/posts/:postId',
+  (req, res, next) => {
+    req.skipAuthentication = true;
+    next();
+  },
+  authenticateJWT,
+  postController.post_content_get
+);
 
 // PUT: Update a specific posts' data
 router.put(

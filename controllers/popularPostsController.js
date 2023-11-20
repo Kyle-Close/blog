@@ -1,39 +1,40 @@
-const { body, validationResult } = require("express-validator");
-const asyncHandler = require("express-async-handler");
+const { body, validationResult } = require('express-validator');
+const asyncHandler = require('express-async-handler');
 
-const PopularPosts = require("../models/popular-posts");
-const Post = require("../models/post");
-const User = require("../models/user");
-const { ValidatorsImpl } = require("express-validator/src/chain");
+const PopularPosts = require('../models/popular-posts');
+const Post = require('../models/post');
+const User = require('../models/user');
 
 exports.popular_posts_get = asyncHandler(async (req, res, next) => {
   try {
     const allPopularPostIDs = await PopularPosts.find();
 
     if (!allPopularPostIDs || allPopularPostIDs.length === 0) {
-      return res.status(404).send("Resource not found.");
+      return res.status(404).send('Resource not found.');
     }
 
     const postIdArray = allPopularPostIDs.map((post) => post.postId.toString());
     console.log(postIdArray);
 
     const popularPosts = await getPopularPosts(postIdArray);
-    const users = await getPostAuthors(popularPosts);
+    const filteredPopularPosts = FilterPopularPosts(popularPosts);
 
-    const result = createPostObjects(popularPosts, users);
+    const users = await getPostAuthors(filteredPopularPosts);
+
+    const result = createPostObjects(filteredPopularPosts, users);
 
     res.json({ posts: result });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send('Internal Server Error');
   }
 });
 
 exports.add_popular_post_post = [
-  body("postId")
+  body('postId')
     .trim()
     .isString()
-    .withMessage("PostId must be a string")
+    .withMessage('PostId must be a string')
     .escape(),
 
   asyncHandler(async (req, res) => {
@@ -42,20 +43,20 @@ exports.add_popular_post_post = [
     if (!errors.isEmpty()) {
       return res
         .status(400)
-        .json({ msg: "Validation error", errors: errors.array() });
+        .json({ msg: 'Validation error', errors: errors.array() });
     }
 
     // Check if the post id is valid
     const post = await Post.findById(req.body.postId);
     if (!post) {
-      return res.status(400).json({ msg: "Post not found" });
+      return res.status(400).json({ msg: 'Post not found' });
     } else {
       // Check if this post is already a popular post
       const doesExist = await PopularPosts.find({ postId: req.body.postId });
       if (doesExist.length > 0) {
         return res
           .status(400)
-          .json({ msg: "This post is already a popular post." });
+          .json({ msg: 'This post is already a popular post.' });
       }
       // Check if there are already 4 popular posts
       const popularPosts = await PopularPosts.find();
@@ -72,7 +73,7 @@ exports.add_popular_post_post = [
       if (isSuccess) {
         return res
           .status(200)
-          .json({ message: "Popular post successfully added." });
+          .json({ message: 'Popular post successfully added.' });
       }
     }
   }),
@@ -89,6 +90,10 @@ async function getPostAuthors(posts) {
   return await User.find({ _id: { $in: userIds } });
 }
 
+function FilterPopularPosts(posts) {
+  return posts.filter((post) => post.isPublished === true);
+}
+
 function createPostObjects(posts, users) {
   return posts.map((post) => {
     const author = users.find(
@@ -97,7 +102,7 @@ function createPostObjects(posts, users) {
     return {
       title: post.title,
       postId: post._id,
-      author: author ? author.username : "Unknown Author",
+      author: author ? author.username : 'Unknown Author',
     };
   });
 }
